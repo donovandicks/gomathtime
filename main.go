@@ -25,24 +25,19 @@ type Operator struct {
 	fn   func(num1, num2 int) int
 }
 
+func Add(num1, num2 int) int { return num1 + num2 }
+func Sub(num1, num2 int) int { return num1 - num2 }
+func Mul(num1, num2 int) int { return num1 * num2 }
+
 var (
 	waitSeconds  int
 	maxNumber    int
 	operatorName string
 
 	operations map[string]Operator = map[string]Operator{
-		"addition": {
-			verb: "add",
-			fn:   func(num1, num2 int) int { return num1 + num2 },
-		},
-		"substraction": {
-			verb: "subtract",
-			fn:   func(num1, num2 int) int { return num1 - num2 },
-		},
-		"multiplication": {
-			verb: "multiply",
-			fn:   func(num1, num2 int) int { return num1 * num2 },
-		},
+		"addition":       {verb: "add", fn: Add},
+		"substraction":   {verb: "subtract", fn: Sub},
+		"multiplication": {verb: "multiply", fn: Mul},
 	}
 )
 
@@ -70,15 +65,12 @@ func handleInput(input string, expected int) (string, bool) {
 // If the given operator is "random", it will select one of the
 // operations at random.
 func getOperator(name string) *Operator {
-	var opName string
 	if name == "random" {
 		operatorNames := maps.Keys(operations)
-		opName = operatorNames[rand.IntN(len(operatorNames))]
-	} else {
-		opName = name
+		name = operatorNames[rand.IntN(len(operatorNames))]
 	}
 
-	op := operations[opName]
+	op := operations[name]
 	return &op
 }
 
@@ -125,6 +117,7 @@ func main() {
 				log.Fatalf("failed to read user input: %v", err)
 			}
 			inputChan <- input
+
 		}()
 
 		select {
