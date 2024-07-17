@@ -71,7 +71,11 @@ func validateFlags() {
 	}
 }
 
-// getInput reads the given buffer for the user's input and
+// getInput reads the given buffer for the user's input and parses it
+// into an integer. If the input is EOF the program will exit gracefully.
+//
+// The program will exit(1) if it encounters an error reading the input
+// or converting it to an integer.
 func getInput(reader *bufio.Reader, inputChan chan<- int, breakChan chan<- struct{}) {
 	input, err := reader.ReadString('\n')
 	if err != nil {
