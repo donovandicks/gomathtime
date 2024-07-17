@@ -20,23 +20,29 @@ const (
 	DefaultOperator    = "random"
 )
 
-type OperatorFunc func(num1, num2 int) int
+type Operator struct {
+	verb string
+	fn   func(num1, num2 int) int
+}
 
 var (
-	waitSeconds int
-	maxNumber   int
-	operator    string
+	waitSeconds  int
+	maxNumber    int
+	operatorName string
 
-	operationVerbs map[string]string = map[string]string{
-		"addition":       "add",
-		"substraction":   "subtract",
-		"multiplication": "multiply",
-	}
-
-	operations map[string]OperatorFunc = map[string]OperatorFunc{
-		"addition":       func(num1, num2 int) int { return num1 + num2 },
-		"substraction":   func(num1, num2 int) int { return num1 - num2 },
-		"multiplication": func(num1, num2 int) int { return num1 * num2 },
+	operations map[string]Operator = map[string]Operator{
+		"addition": {
+			verb: "add",
+			fn:   func(num1, num2 int) int { return num1 + num2 },
+		},
+		"substraction": {
+			verb: "subtract",
+			fn:   func(num1, num2 int) int { return num1 - num2 },
+		},
+		"multiplication": {
+			verb: "multiply",
+			fn:   func(num1, num2 int) int { return num1 * num2 },
+		},
 	}
 )
 
@@ -58,21 +64,22 @@ func handleInput(input string, expected int) (string, bool) {
 	return "Teacher: Wrong answer, game over!", false
 }
 
-// getOpFunc returns the math function associated with the given
+// getOperator returns the math function associated with the given
 // operator and the English verb for the operation.
 //
 // If the given operator is "random", it will select one of the
 // operations at random.
-func getOpFunc(operator string) (OperatorFunc, string) {
+func getOperator(name string) *Operator {
 	var opName string
-	if operator == "random" {
+	if name == "random" {
 		operatorNames := maps.Keys(operations)
 		opName = operatorNames[rand.IntN(len(operatorNames))]
 	} else {
-		opName = operator
+		opName = name
 	}
 
-	return operations[opName], operationVerbs[opName]
+	op := operations[opName]
+	return &op
 }
 
 // validateFlags checks that the given inputs are valid
@@ -81,11 +88,11 @@ func validateFlags() {
 		log.Fatal("waitSeconds should be a positive integer\n")
 	}
 
-	operator = strings.ToLower(operator)
-	_, valid := operations[operator]
-	if !valid && operator != "random" {
+	operatorName = strings.ToLower(operatorName)
+	_, valid := operations[operatorName]
+	if !valid && operatorName != "random" {
 		log.Fatalf(
-			"Given operator %s is not valid, please choose one of ['addition', 'substraction', 'multiplication', 'random']", operator,
+			"Given operator %s is not valid, please choose one of ['addition', 'substraction', 'multiplication', 'random']", operatorName,
 		)
 	}
 }
@@ -93,7 +100,7 @@ func validateFlags() {
 func main() {
 	flag.IntVar(&waitSeconds, "s", DefaultWaitSeconds, "number of seconds to wait for an answer before quitting")
 	flag.IntVar(&maxNumber, "n", DefaultMaxNumber, "the maximum number the system can prompt for calculations")
-	flag.StringVar(&operator, "o", DefaultOperator, "the math operation to ask the user. defaults to a random operation for each problem")
+	flag.StringVar(&operatorName, "o", DefaultOperator, "the math operation to ask the user. defaults to a random operation for each problem")
 	flag.Parse()
 
 	validateFlags()
@@ -103,13 +110,12 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		num1 := rand.IntN(maxNumber)
-		num2 := rand.IntN(maxNumber)
+		num1, num2 := rand.IntN(maxNumber), rand.IntN(maxNumber)
 
-		opFunc, verb := getOpFunc(operator)
-		expected := opFunc(num1, num2)
+		op := getOperator(operatorName)
+		expected := op.fn(num1, num2)
 
-		fmt.Printf("Teacher: %s %d and %d\nUser: ", verb, num1, num2)
+		fmt.Printf("Teacher: %s %d and %d\nUser: ", op.verb, num1, num2)
 
 		breakChan := make(chan struct{}, 1)
 		inputChan := make(chan string)
