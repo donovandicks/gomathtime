@@ -92,7 +92,7 @@ func validateFlags() {
 
 func main() {
 	flag.IntVar(&waitSeconds, "s", DefaultWaitSeconds, "number of seconds to wait for an answer before quitting")
-	flag.IntVar(&maxNumber, "n", DefaultMaxNumber, "the maximum number the system can prompt for addition")
+	flag.IntVar(&maxNumber, "n", DefaultMaxNumber, "the maximum number the system can prompt for calculations")
 	flag.StringVar(&operator, "o", DefaultOperator, "the math operation to ask the user. defaults to a random operation for each problem")
 	flag.Parse()
 
@@ -135,7 +135,7 @@ func main() {
 			fmt.Println("\nTeacher: Goodbye!")
 			return
 		case <-time.After(waitTimeout):
-			fmt.Printf("Teacher: Oops! %d seconds have passed. Game over!\n", waitSeconds)
+			fmt.Printf("\nTeacher: Oops! %d seconds have passed. Game over!\n", waitSeconds)
 			return
 		}
 	}
