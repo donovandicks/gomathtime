@@ -104,21 +104,18 @@ func main() {
 	flag.Parse()
 
 	validateFlags()
-
 	waitTimeout := time.Duration(waitSeconds) * time.Second
 
+	breakChan := make(chan struct{}, 1)
+	inputChan := make(chan string)
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
 		num1, num2 := rand.IntN(maxNumber), rand.IntN(maxNumber)
 
 		op := getOperator(operatorName)
-		expected := op.fn(num1, num2)
-
 		fmt.Printf("Teacher: %s %d and %d\nUser: ", op.verb, num1, num2)
 
-		breakChan := make(chan struct{}, 1)
-		inputChan := make(chan string)
 		go func() {
 			input, err := reader.ReadString('\n')
 			if err != nil {
@@ -132,7 +129,7 @@ func main() {
 
 		select {
 		case input := <-inputChan:
-			msg, shouldContinue := handleInput(input, expected)
+			msg, shouldContinue := handleInput(input, op.fn(num1, num2))
 			fmt.Println(msg)
 			if !shouldContinue {
 				return
