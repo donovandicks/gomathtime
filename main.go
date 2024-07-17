@@ -41,24 +41,6 @@ var (
 	}
 )
 
-// handleInput parses the user's provided answer and compares it
-// to the expected answer.
-//
-// It returns a message to show the user and an indicator for
-// whether the program should continue prompting the user.
-func handleInput(input string, expected int) (string, bool) {
-	answer, err := strconv.Atoi(strings.Trim(input, "\r\n"))
-	if err != nil {
-		return "Teacher: Please try again using a valid number", true
-	}
-
-	if answer == expected {
-		return "Teacher: Correct!", true
-	}
-
-	return "Teacher: Wrong answer, game over!", false
-}
-
 // getOperator returns the math function associated with the given
 // operator and the English verb for the operation.
 //
@@ -89,7 +71,8 @@ func validateFlags() {
 	}
 }
 
-func getInput(reader *bufio.Reader, inputChan chan<- string, breakChan chan<- struct{}) {
+// getInput reads the given buffer for the user's input and
+func getInput(reader *bufio.Reader, inputChan chan<- int, breakChan chan<- struct{}) {
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		if err.Error() == "EOF" {
@@ -97,7 +80,13 @@ func getInput(reader *bufio.Reader, inputChan chan<- string, breakChan chan<- st
 		}
 		log.Fatalf("failed to read user input: %v", err)
 	}
-	inputChan <- input
+
+	answer, err := strconv.Atoi(strings.Trim(input, "\r\n"))
+	if err != nil {
+		log.Fatalf("could not convert user input '%s' to int: %v", input, err)
+	}
+
+	inputChan <- answer
 }
 
 func main() {
@@ -110,7 +99,7 @@ func main() {
 	waitTimeout := time.Duration(waitSeconds) * time.Second
 
 	breakChan := make(chan struct{}, 1)
-	inputChan := make(chan string)
+	inputChan := make(chan int)
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -123,11 +112,13 @@ func main() {
 
 		select {
 		case input := <-inputChan:
-			msg, shouldContinue := handleInput(input, op.fn(num1, num2))
-			fmt.Println(msg)
-			if !shouldContinue {
-				return
+			if input == op.fn(num1, num2) {
+				fmt.Println("Teacher: Correct!")
+				continue
 			}
+
+			fmt.Println("Teacher: Wrong answer, game over!")
+			return
 		case <-breakChan:
 			fmt.Println("\nTeacher: Goodbye!")
 			return
