@@ -89,6 +89,17 @@ func validateFlags() {
 	}
 }
 
+func getInput(reader *bufio.Reader, inputChan chan<- string, breakChan chan<- struct{}) {
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		if err.Error() == "EOF" {
+			breakChan <- struct{}{}
+		}
+		log.Fatalf("failed to read user input: %v", err)
+	}
+	inputChan <- input
+}
+
 func main() {
 	flag.IntVar(&waitSeconds, "s", DefaultWaitSeconds, "number of seconds to wait for an answer before quitting")
 	flag.IntVar(&maxNumber, "n", DefaultMaxNumber, "the maximum number the system can prompt for calculations")
@@ -108,17 +119,7 @@ func main() {
 		op := getOperator(operatorName)
 		fmt.Printf("Teacher: %s %d and %d\nUser: ", op.verb, num1, num2)
 
-		go func() {
-			input, err := reader.ReadString('\n')
-			if err != nil {
-				if err.Error() == "EOF" {
-					breakChan <- struct{}{}
-				}
-				log.Fatalf("failed to read user input: %v", err)
-			}
-			inputChan <- input
-
-		}()
+		go getInput(reader, inputChan, breakChan)
 
 		select {
 		case input := <-inputChan:
