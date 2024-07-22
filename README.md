@@ -5,9 +5,11 @@ with a time limit.
 
 Usage:
 ```
-go run main.go [-s int] [-n int] [-o (multiplication, addition, subtraction, random)]
+go build
 
-Usage of main:
+./gomathtime [-s int] [-n int] [-o (multiplication, addition, subtraction, random)]
+
+Usage of gomathtime:
   -n int
     	the maximum number the system can prompt for calculations (default 10)
   -o string
@@ -18,7 +20,7 @@ Usage of main:
 
 Example:
 ```
-go run main.go -s 3 -n 10 -o addition
+./gomathtime -s 3 -n 10 -o addition
 
 Teacher: add 6 and 3
 User: 9
